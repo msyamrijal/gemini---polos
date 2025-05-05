@@ -1,0 +1,22 @@
+{
+  "name": "Jadwal Kuliah Interaktif",
+  "short_name": "JadwalKu",
+  "description": "Aplikasi interaktif untuk melihat jadwal kuliah.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#FDFCFB",
+  "theme_color": "#5A9261",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
