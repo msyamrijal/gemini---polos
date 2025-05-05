@@ -258,6 +258,9 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    /* Ensure these override any media query settings during animation */
+    right: auto; 
+    bottom: auto;
     /* Override JS positioning temporarily */
 }
 
