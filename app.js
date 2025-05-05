@@ -420,10 +420,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add menu toggle functionality
     if (elements.menuToggle && elements.floatingMenu) { 
-        // Set initial position (optional, default top-right)
-        elements.floatingMenu.style.top = '20px';
-        elements.floatingMenu.style.left = `${window.innerWidth - elements.floatingMenu.offsetWidth - 20}px`;
-        setupDraggableMenu();
+        // Start Welcome Animation
+        elements.floatingMenu.classList.add('welcome-animation');
+
+        // After 3 seconds, end animation and set final position/enable drag
+        setTimeout(() => {
+            elements.floatingMenu.classList.remove('welcome-animation');
+            
+            // Set initial position after animation (e.g., top-right)
+            // Ensure offsetWidth is calculated *after* animation class is removed
+            const menuWidth = elements.floatingMenu.offsetWidth || 50; // Use default if offsetWidth is 0 initially
+            elements.floatingMenu.style.top = '20px';
+            elements.floatingMenu.style.left = `${window.innerWidth - menuWidth - 20}px`;
+            setupDraggableMenu(); // Initialize dragging *after* positioning
+        }, 3000); // 3000 milliseconds = 3 seconds
     }
 
     // Close menu when clicking outside

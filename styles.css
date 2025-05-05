@@ -253,6 +253,24 @@ body {
     z-index: 1000;
 }
 
+/* Initial state for welcome animation */
+.floating-menu.welcome-animation {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Override JS positioning temporarily */
+}
+
+/* Apply pulse animation to the button during welcome */
+.floating-menu.welcome-animation .menu-toggle {
+    animation: welcomePulse 1s ease-in-out infinite alternate;
+    transform: scale(1.5); /* Start slightly larger */
+    width: 65px; /* Larger size during animation */
+    height: 65px;
+    border-width: 3px; /* Thicker border */
+}
+
+
 .menu-toggle {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -262,7 +280,7 @@ body {
     display: grid;
     place-items: center;
     cursor: pointer;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-md); 
     transition: var(--transition);
 }
 
@@ -315,6 +333,16 @@ body {
     justify-content: space-between; /* Posisikan item di ujung */
     align-items: center; /* Ratakan item secara vertikal */
     width: 100%; /* Ambil lebar penuh container */
+}
+
+/* Animation keyframes */
+@keyframes welcomePulse {
+    from {
+        transform: scale(1.4); /* Start slightly larger */
+    }
+    to {
+        transform: scale(1.6); /* Pulse larger */
+    }
 }
 
 .main-content {
@@ -729,6 +757,7 @@ body {
     .header-controls {
         width: 100%; /* Take full width when wrapped */
         justify-content: space-between; /* Space out controls */
+        flex-wrap: nowrap; /* Prevent controls themselves from wrapping */
         order: 2; /* Ensure controls wrap below brand */
         margin-top: 0.5rem; /* Add space when wrapped */
     }
