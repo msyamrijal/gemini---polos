@@ -266,6 +266,21 @@ body {
     transition: var(--transition);
 }
 
+.assistive-icon {
+    display: block;
+    width: 22px; /* Ukuran lingkaran luar */
+    height: 22px;
+    border: 2px solid var(--color-text-muted); /* Warna border luar */
+    border-radius: 50%;
+    position: relative; /* Untuk posisi lingkaran dalam */
+    transition: border-color var(--transition);
+}
+
+.menu-toggle:hover .assistive-icon {
+    border-color: white; /* Ubah warna border saat hover tombol */
+}
+
+
 .menu-toggle:active { /* Style saat tombol ditekan */
     cursor: grabbing;
     box-shadow: var(--shadow-sm); /* Sedikit kurangi shadow saat digrab */
