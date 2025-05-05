@@ -10,6 +10,8 @@ const elements = {
     // searchToggleBtn: document.getElementById('searchToggleBtn'), // Removed
     gridViewBtn: document.getElementById('gridViewBtn'),
     calendarViewBtn: document.getElementById('calendarViewBtn'),
+    driveToggleBtn: document.getElementById('driveToggleBtn'), // Drive button
+    driveDropdown: document.getElementById('driveDropdown'),   // Drive dropdown
     
     // Other elements
     scheduleGrid: document.getElementById('scheduleGrid'),
@@ -439,10 +441,21 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
     // elements.searchToggleBtn.addEventListener('click', toggleSearchInput); // Removed listener
     
+    // Drive Dropdown Toggle
+    if (elements.driveToggleBtn && elements.driveDropdown) {
+        elements.driveToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent closing main menu immediately
+            elements.driveDropdown.classList.toggle('active');
+            // Optional: Close main menu if drive dropdown is opened? Or keep both open? Current logic keeps main menu open.
+        });
+    }
+
     // Add menu toggle functionality
     if (elements.menuToggle && elements.floatingMenu) { 
         // Start Welcome Animation
         elements.floatingMenu.classList.add('welcome-animation');
+        // Hide drive dropdown during animation initially
+        if (elements.driveDropdown) elements.driveDropdown.classList.remove('active');
 
         // After 3 seconds, end animation and set final position/enable drag
         setTimeout(() => {
@@ -459,10 +472,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {
+        // Close Drive dropdown if click is outside it and its button
+        if (elements.driveDropdown && elements.driveDropdown.classList.contains('active') &&
+            !elements.driveDropdown.contains(e.target) &&
+            !elements.driveToggleBtn.contains(e.target)) {
+            elements.driveDropdown.classList.remove('active');
+        }
+        
+        // Close main menu if click is outside it and its button (and not inside drive dropdown)
         if (elements.floatingMenu.classList.contains('active') &&
             !elements.floatingMenu.contains(e.target) &&
             !elements.menuToggle.contains(e.target)) {
-            elements.floatingMenu.classList.remove('active');
         }
     });
     // Modal closing listeners (already handled by delegation in attachDynamicListeners)
