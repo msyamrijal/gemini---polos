@@ -317,10 +317,21 @@ const formatDate = (dateString) => {
         return 'Tanggal tidak valid'; // Handle invalid date strings
     }
 
+    // Get today's and tomorrow's date at midnight for comparison
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
     const inputDateOnly = new Date(date);
     inputDateOnly.setHours(0, 0, 0, 0);
+
+    // Check if the date is today or tomorrow
+    if (inputDateOnly.getTime() === today.getTime()) {
+        return 'Hari Ini';
+    } else if (inputDateOnly.getTime() === tomorrow.getTime()) {
+        return 'Besok';
+    }
 
     const options = {
         weekday: 'long',
