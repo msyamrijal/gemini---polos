@@ -436,6 +436,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initCalendar(); // Initialize calendar structure
     fetchData(); // Fetch data after DOM is loaded
+    
+    registerServiceWorker(); // Daftarkan Service Worker
 
     // Static event listeners
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
@@ -644,4 +646,23 @@ const switchView = (view) => {
    if (allSchedules.length > 0) {
        filterSchedules(); // This will now render the correct view
    }
+};
+
+// ======================
+// SERVICE WORKER REGISTRATION
+// ======================
+const registerServiceWorker = () => {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { // Gunakan 'load' agar tidak menunda render awal
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        })
+        .catch(error => {
+          console.log('ServiceWorker registration failed: ', error);
+        });
+    });
+  } else {
+      console.log('Service Worker not supported by this browser.');
+  }
 };
