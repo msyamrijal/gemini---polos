@@ -23,16 +23,19 @@
             <select id="institutionFilter" class="institution-filter">
                 <option value="all">Semua Institusi</option>
             </select>
-            <button id="themeToggle" class="theme-toggle" aria-label="Toggle Light/Dark Theme">
-                <span class="theme-icon"></span>
-            </button>
-            <div class="view-switcher">
-                <button id="gridViewBtn" class="view-btn active" aria-label="Grid View">
-                    <i class="fas fa-th-large"></i>
+            <!-- Wrapper for theme toggle and view switcher -->
+            <div class="menu-row">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle Light/Dark Theme">
+                    <span class="theme-icon"></span>
                 </button>
-                <button id="calendarViewBtn" class="view-btn" aria-label="Calendar View">
-                    <i class="fas fa-calendar-day"></i>
-                </button>
+                <div class="view-switcher">
+                    <button id="gridViewBtn" class="view-btn active" aria-label="Grid View">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button id="calendarViewBtn" class="view-btn" aria-label="Calendar View">
+                        <i class="fas fa-calendar-day"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

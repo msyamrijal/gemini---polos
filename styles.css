@@ -294,6 +294,14 @@ body {
     display: flex;
 }
 
+/* Style for the row containing theme toggle and view switcher */
+.menu-row {
+    display: flex;
+    justify-content: space-between; /* Posisikan item di ujung */
+    align-items: center; /* Ratakan item secara vertikal */
+    width: 100%; /* Ambil lebar penuh container */
+}
+
 .main-content {
     padding-top: 2.5rem;
     padding-bottom: 3rem;
