@@ -15,6 +15,18 @@
         <button class="menu-toggle" aria-label="Toggle Menu">
             <!-- Ikon baru mirip AssistiveTouch -->
             <span class="assistive-icon"></span>
+            <!-- SVG for Circular Text during Welcome Animation -->
+            <svg class="welcome-text-circle" viewBox="0 0 120 120">
+                <defs>
+                    <!-- Invisible path for the text to follow -->
+                    <path id="textCirclePath" d="M 60, 60 m -45, 0 a 45,45 0 1,1 90,0 a 45,45 0 1,1 -90,0" fill="none"/>
+                </defs>
+                <text dy="-2" fill="currentColor"> <!-- Adjust dy for vertical alignment -->
+                    <textPath xlink:href="#textCirclePath" startOffset="50%" text-anchor="middle">
+                        Tap Here!
+                    </textPath>
+                </text>
+            </svg>
         </button>
         <div class="menu-content">
             <div class="search-container">

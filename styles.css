@@ -270,6 +270,32 @@ body {
     border-width: 3px; /* Thicker border */
 }
 
+/* Style for the circular text SVG */
+.welcome-text-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(0deg); /* Start rotation */
+    width: 120px; /* Should match viewBox width */
+    height: 120px; /* Should match viewBox height */
+    pointer-events: none; /* Prevent SVG from blocking clicks */
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.3s ease;
+    color: var(--color-primary); /* Text color */
+    animation: rotateText 10s linear infinite; /* Add rotation animation */
+}
+
+/* Show and style text during welcome animation */
+.floating-menu.welcome-animation .welcome-text-circle {
+    opacity: 1;
+}
+
+.welcome-text-circle text {
+    font-size: 11px; /* Adjust font size as needed */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px; /* Adjust letter spacing */
+}
 
 .menu-toggle {
     background: var(--color-surface);
@@ -342,6 +368,16 @@ body {
     }
     to {
         transform: scale(1.6); /* Pulse larger */
+    }
+}
+
+/* Keyframes for text rotation */
+@keyframes rotateText {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
     }
 }
 
