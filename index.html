@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Kuliah Interaktif</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="floating-menu">
+        <button class="menu-toggle" aria-label="Toggle Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="menu-content">
+            <div class="search-container">
+                <!-- Removed search icon, input is always visible in menu -->
+                <input type="text" id="searchInput" placeholder="Cari Jadwal..." class="search-input">
+            </div>
+            <select id="institutionFilter" class="institution-filter">
+                <option value="all">Semua Institusi</option>
+            </select>
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle Light/Dark Theme">
+                <span class="theme-icon"></span>
+            </button>
+            <div class="view-switcher">
+                <button id="gridViewBtn" class="view-btn active" aria-label="Grid View">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button id="calendarViewBtn" class="view-btn" aria-label="Calendar View">
+                    <i class="fas fa-calendar-day"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <main class="main-content container">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Memuat Jadwal...</p>
+        </div>
+
+        <section id="scheduleGrid" class="schedule-grid view-container active" aria-live="polite">
+            <!-- Grid content goes here -->
+        </section>
+
+        <section id="calendarView" class="calendar-view view-container" aria-live="polite">
+             <!-- FullCalendar will render here -->
+        </section>
+
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-ghost empty-icon"></i>
+            <h3>Oops! Jadwal tidak ditemukan</h3>
+            <p>Coba kata kunci atau filter yang berbeda.</p>
+        </div>
+    </main>
+
+    <div class="modal" id="genericModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="close-modal" aria-label="Close modal">&times;</button>
+            <h3 id="modalTitle" class="modal-title">Detail Jadwal</h3>
+            <div class="modal-body" id="modalBody">
+                </div>
+        </div>
+    </div>
+
+    <!-- FullCalendar Dependencies -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+
+    <script src="app.js"></script>
+</body>
+</html>
