@@ -492,6 +492,19 @@ body {
     color: var(--color-primary);
 }
 
+.discussion-topic {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1rem; /* Space below the topic */
+    line-height: 1.5;
+}
+
+.discussion-topic strong {
+    color: var(--color-text); /* Make the label slightly darker */
+    font-weight: 600;
+}
+
+
 .participants {
     display: flex;
     flex-wrap: wrap;
@@ -610,6 +623,11 @@ body {
 
 .modal-meta .institute {
     margin: 0; /* Reset margin */
+}
+
+.modal-discussion {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .modal-meta .date-display {

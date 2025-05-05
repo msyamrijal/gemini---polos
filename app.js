@@ -81,7 +81,7 @@ const fetchData = async () => {
         // Process and sort data
         allSchedules = data
             .filter(item => {
-                // Basic validation: Ensure essential fields exist and date is valid
+                // Basic validation: Ensure essential fields exist and date is valid. Materi Diskusi is optional here.
                 return item.Tanggal && item.Institusi && item.Mata_Pelajaran && item.Peserta && !isNaN(new Date(item.Tanggal).getTime());
             })
             .map(item => ({ ...item, TanggalDate: new Date(item.Tanggal) })) // Pre-convert date for sorting/filtering
@@ -137,7 +137,8 @@ const filterSchedules = () => {
         const searchableText = [
             item.Institusi,
             item.Mata_Pelajaran,
-            item.Peserta.join(' ')
+            item.Peserta.join(' '),
+            item.Materi_Diskusi || '' // Include Materi Diskusi in search, handle if it's missing
             // Optionally add formatted date if needed for search
         ].join(' ').toLowerCase();
 
@@ -188,6 +189,10 @@ const createScheduleCard = (item) => {
             <span class="date-display clickable" data-entity="Tanggal">${formatDate(item.Tanggal)}</span>
         </div>
         <div class="institute clickable" data-entity="Institusi">${item.Institusi}</div>
+        ${item.Materi_Diskusi ? `
+            <div class="discussion-topic">
+                <strong>Materi:</strong> ${item.Materi_Diskusi}
+            </div>` : ''}
         <div class="participants">
             ${item.Peserta.map(peserta => `
                 <span class="participant-tag clickable" data-entity="Peserta">${peserta}</span>
@@ -203,7 +208,8 @@ const renderCalendar = (data) => {
    const events = data.map(item => ({
        title: item.Mata_Pelajaran,
        start: item.TanggalDate, // Use the pre-converted Date object
-       extendedProps: { // Store original item data if needed for clicks etc.
+       extendedProps: { // Store original item data including Materi Diskusi
+           Materi_Diskusi: item.Materi_Diskusi,
            itemData: item
        },
        // Optional: Add colors based on institution or other factors
@@ -247,6 +253,10 @@ const generateModalContent = (data) => {
                 <span class="institute">${item.Institusi}</span>
                 <span class="date-display">${formatDate(item.Tanggal)}</span>
             </div>
+            ${item.Materi_Diskusi ? `
+            <div class="discussion-topic modal-discussion">
+                <strong>Materi Diskusi:</strong><br>${item.Materi_Diskusi}
+            </div>` : ''}
             <div class="participants">
                 ${item.Peserta.map(p => `<span class="participant-tag">${p}</span>`).join('')}
             </div>
