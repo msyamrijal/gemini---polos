@@ -110,24 +110,24 @@ body {
     .header {
         padding: 0.6rem 0;
     }
-    
+
     .header-controls {
         gap: 0.5rem;
     }
-    
+
     .institution-filter {
         min-width: 120px;
         font-size: 0.85rem;
     }
-    
+
     .search-input:not(.hidden) {
         width: 150px;
     }
-    
+
     .search-input:focus {
         width: 180px;
     }
-    
+
     .view-switcher {
         margin-left: 0;
     }
@@ -259,7 +259,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     /* Ensure these override any media query settings during animation */
-    right: auto; 
+    right: auto;
     bottom: auto;
     /* Override JS positioning temporarily */
 }
@@ -309,7 +309,7 @@ body {
     display: grid;
     place-items: center;
     cursor: pointer;
-    box-shadow: var(--shadow-md); 
+    box-shadow: var(--shadow-md);
     transition: var(--transition);
 }
 
@@ -456,7 +456,7 @@ body {
         top: 10px;
         right: 10px;
     }
-    
+
     .menu-content {
         width: 200px;
     }
@@ -967,4 +967,70 @@ body {
         width: 20px;
         height: 20px;
     }
+}
+
+/* ====================== */
+/* INSTALL POPUP STYLES */
+/* ====================== */
+.install-popup {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0s 0.5s linear;
+}
+
+.install-popup:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease;
+}
+
+.install-popup p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.install-btn {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color var(--transition);
+}
+
+.install-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.dismiss-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.2rem;
+}
+
+.dismiss-btn:hover {
+    color: var(--color-text);
+}
+
+.hidden {
+    display: none !important; /* Ensure it's hidden */
 }

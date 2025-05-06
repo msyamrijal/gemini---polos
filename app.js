@@ -12,7 +12,7 @@ const elements = {
     calendarViewBtn: document.getElementById('calendarViewBtn'),
     driveToggleBtn: document.getElementById('driveToggleBtn'), // Drive button
     driveDropdown: document.getElementById('driveDropdown'),   // Drive dropdown
-    
+
     // Other elements
     scheduleGrid: document.getElementById('scheduleGrid'),
     loading: document.getElementById('loading'),
@@ -23,11 +23,16 @@ const elements = {
     closeModalBtn: document.querySelector('.close-modal'),
     modalOverlay: document.querySelector('.modal-overlay'),
     calendarView: document.getElementById('calendarView'),
-    
+
     // Popup menu elements
     menuToggle: document.querySelector('.menu-toggle'),
     floatingMenu: document.querySelector('.floating-menu'),
-    menuContent: document.querySelector('.menu-content')
+    menuContent: document.querySelector('.menu-content'),
+
+    // Install Prompt elements
+    installPopup: document.getElementById('installPopup'),
+    installBtn: document.getElementById('installBtn'),
+    dismissInstallBtn: document.getElementById('dismissInstallBtn')
 };
 
 let allSchedules = [];
@@ -40,6 +45,7 @@ let isDragging = false;
 let dragStartX, dragStartY;
 let initialMenuX, initialMenuY;
 let hasDragged = false; // Flag to differentiate click from drag
+let deferredInstallPrompt = null; // To store the install prompt event
 
 // ======================
 // THEME MANAGEMENT
@@ -315,6 +321,12 @@ const attachDynamicListeners = () => {
         if (target === elements.modalOverlay || target === elements.closeModalBtn || target.closest('.close-modal')) {
              hideModal();
         }
+
+        // Close drive dropdown when a link is clicked
+        if (target.classList.contains('drive-link') && elements.driveDropdown) {
+            elements.driveDropdown.classList.remove('active');
+            // Main menu remains open
+        }
     });
 };
 
@@ -436,13 +448,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initCalendar(); // Initialize calendar structure
     fetchData(); // Fetch data after DOM is loaded
-    
+
     registerServiceWorker(); // Daftarkan Service Worker
 
     // Static event listeners
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
     // elements.searchToggleBtn.addEventListener('click', toggleSearchInput); // Removed listener
-    
+
     // Drive Dropdown Toggle
     if (elements.driveToggleBtn && elements.driveDropdown) {
         elements.driveToggleBtn.addEventListener('click', (e) => {
@@ -453,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Add menu toggle functionality
-    if (elements.menuToggle && elements.floatingMenu) { 
+    if (elements.menuToggle && elements.floatingMenu) {
         // Start Welcome Animation
         elements.floatingMenu.classList.add('welcome-animation');
         // Hide drive dropdown during animation initially
@@ -462,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // After 3 seconds, end animation and set final position/enable drag
         setTimeout(() => {
             elements.floatingMenu.classList.remove('welcome-animation');
-            
+
             // Set initial position after animation (e.g., top-right)
             // Ensure offsetWidth is calculated *after* animation class is removed
             const menuWidth = elements.floatingMenu.offsetWidth || 50; // Use default if offsetWidth is 0 initially
@@ -480,11 +492,13 @@ document.addEventListener('DOMContentLoaded', () => {
             !elements.driveToggleBtn.contains(e.target)) {
             elements.driveDropdown.classList.remove('active');
         }
-        
+
         // Close main menu if click is outside it and its button (and not inside drive dropdown)
         if (elements.floatingMenu.classList.contains('active') &&
             !elements.floatingMenu.contains(e.target) &&
             !elements.menuToggle.contains(e.target)) {
+            // Logic to close main menu was removed here previously, keep it removed or add back if needed
+            // elements.floatingMenu.classList.remove('active');
         }
     });
     // Modal closing listeners (already handled by delegation in attachDynamicListeners)
@@ -494,6 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close modal with Escape key
      window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && elements.modal.style.display === 'block') {
+            // Also hide install prompt if escape is pressed? Optional.
+            // if (elements.installPopup && !elements.installPopup.classList.contains('hidden')) elements.installPopup.classList.add('hidden');
             hideModal();
         }
     });
@@ -501,6 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // View Switcher Listeners
     elements.gridViewBtn.addEventListener('click', () => switchView('grid'));
     elements.calendarViewBtn.addEventListener('click', () => switchView('calendar'));
+
+    // Setup Install Prompt Listener
+    setupInstallPrompt();
 });
 
 // ======================
@@ -514,7 +533,7 @@ const setupDraggableMenu = () => {
         isDragging = true;
         hasDragged = false; // Reset drag flag
         menuToggle.style.cursor = 'grabbing'; // Change cursor
-        
+
         // Get initial positions
         const event = e.type === 'touchstart' ? e.touches[0] : e;
         dragStartX = event.clientX;
@@ -527,7 +546,7 @@ const setupDraggableMenu = () => {
         document.addEventListener('mouseup', dragEnd);
         document.addEventListener('touchmove', dragging, { passive: false }); // passive: false to prevent scrolling on touch devices
         document.addEventListener('touchend', dragEnd);
-        
+
         e.preventDefault(); // Prevent text selection during drag
     };
 
@@ -553,7 +572,7 @@ const setupDraggableMenu = () => {
 
         floatingMenu.style.left = `${newX}px`;
         floatingMenu.style.top = `${newY}px`;
-        
+
         e.preventDefault(); // Prevent scrolling while dragging on touch
     };
 
@@ -665,4 +684,60 @@ const registerServiceWorker = () => {
   } else {
       console.log('Service Worker not supported by this browser.');
   }
+};
+
+// ======================
+// PWA INSTALL PROMPT LOGIC
+// ======================
+const setupInstallPrompt = () => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredInstallPrompt = e;
+        console.log('`beforeinstallprompt` event was fired.');
+
+        // Wait 10 seconds then show the custom prompt, only if not already installed
+        setTimeout(() => {
+            if (deferredInstallPrompt && elements.installPopup) {
+                 // Check if running as standalone PWA already
+                 if (!window.matchMedia('(display-mode: standalone)').matches) {
+                    elements.installPopup.classList.remove('hidden');
+                 }
+            }
+        }, 10000); // 10000 milliseconds = 10 seconds
+    });
+
+    if (elements.installBtn) {
+        elements.installBtn.addEventListener('click', async () => {
+            if (!deferredInstallPrompt) {
+                console.log('Install prompt event not available.');
+                return;
+            }
+            // Hide our custom prompt
+            elements.installPopup.classList.add('hidden');
+            // Show the install prompt
+            deferredInstallPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, clear it.
+            deferredInstallPrompt = null;
+        });
+    }
+
+    if (elements.dismissInstallBtn) {
+        elements.dismissInstallBtn.addEventListener('click', () => {
+            elements.installPopup.classList.add('hidden');
+            // Optionally, set a flag in localStorage to not show again for this session/day
+            // localStorage.setItem('installPromptDismissed', 'true');
+        });
+    }
+
+    window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        // Hide the prompt if it's somehow still visible
+        if (elements.installPopup) elements.installPopup.classList.add('hidden');
+        deferredInstallPrompt = null; // Clear the deferred prompt
+    });
 };
