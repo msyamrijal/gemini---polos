@@ -5,9 +5,14 @@ const urlsToCache = [
   '/styles.css',
   '/app.js',
   '/manifest.json',
-  // Tambahkan path ke ikon Anda di sini, contoh:
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  // Path ke ikon yang sudah disederhanakan:
+  '/icons/icon-72.png',
+  '/icons/icon-96.png',
+  '/icons/icon-128.png',
+  '/icons/icon-144.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-maskable-192.png',
   // Tambahkan URL font atau aset eksternal lain jika perlu (hati-hati dengan CORS)
   'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
