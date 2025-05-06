@@ -816,6 +816,7 @@ body {
     place-items: center;
     transition: var(--transition);
     outline: none;
+    flex-shrink: 0; /* Tambahkan ini agar tombol tidak menyusut */
 }
 
 .theme-toggle:hover {
