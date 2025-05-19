@@ -9,9 +9,9 @@ const API_URL = 'https://script.google.com/macros/s/AKfycby9sPywic_2ifeYBzE3dQMH
 // PENTING: Kunci VAPID ini harus unik untuk aplikasi Anda.
 // Jangan gunakan kunci contoh di produksi.
 // Anda bisa menghasilkan kunci VAPID menggunakan library seperti web-push (Node.js) atau online generator.
-// Contoh: https://web-push-codelab.glitch.me/
-const VAPID_PUBLIC_KEY = 'BIhgLx2GBXHAF3KDIkYvuB90ypRDLth5sT6npJYc28j3gfTeOiggSN-1URWXSNNaNt7lfWAzedOwJ5OCEBGAvG8'; // <--- GANTI INI
-const VAPID_PRIVATE_KEY = '1L_deNHTSH6u74-EM8CQLK5_vPH2UcRmBcCsMnx_Hj4'; // <--- GANTI INI (Meskipun tidak digunakan di frontend, penting untuk backend)
+// Contoh: https://web-push-codelab.glitch.me/ atau npx web-push generate-vapid-keys
+const VAPID_PUBLIC_KEY = 'BIhgLx2GBXHAF3KDIkYvuB90ypRDLth5sT6npJYc28j3gfTeOiggSN-1URWXSNNaNt7lfWAzedOwJ5OCEBGAvG8'; // <--- PASTIKAN INI KUNCI PUBLIK ANDA
+// VAPID_PRIVATE_KEY TIDAK BOLEH ADA DI FRONTEND (app.js)
 
 // Elemen DOM
 const elements = {
@@ -364,10 +364,12 @@ const attachDynamicListeners = () => {
 // NOTIFICATION & PUSH SUBSCRIPTION
 // ======================
 const checkNotificationPermission = () => {
+    console.log('Checking notification permission...');
     if (!('Notification' in window)) {
-        console.warn("Browser does not support notifications.");
+        console.warn("Browser tidak mendukung Notifikasi.");
         return 'unsupported';
     }
+    console.log('Notification.permission:', Notification.permission);
     return Notification.permission; // 'default', 'granted', 'denied'
 };
 
@@ -375,6 +377,7 @@ const updateNotificationButton = (permission) => {
     if (!elements.notificationToggleBtn) return;
 
     const icon = elements.notificationToggleBtn.querySelector('i');
+    if (!icon) return; // Pastikan ikon ada
     const text = elements.notificationToggleBtn.childNodes[1]; // Get the text node
 
     if (permission === 'granted') {
@@ -390,6 +393,13 @@ const updateNotificationButton = (permission) => {
         elements.notificationToggleBtn.style.opacity = 0.7;
         elements.notificationToggleBtn.style.cursor = 'default';
         elements.notificationToggleBtn.title = 'Anda telah memblokir notifikasi. Harap ubah pengaturan browser Anda.';
+    } else if (permission === 'unsupported') {
+        icon.className = 'fas fa-bell-slash';
+        text.nodeValue = ' Notifikasi Tdk Didukung';
+        elements.notificationToggleBtn.disabled = true;
+        elements.notificationToggleBtn.style.opacity = 0.7;
+        elements.notificationToggleBtn.style.cursor = 'default';
+        elements.notificationToggleBtn.title = 'Anda telah memblokir notifikasi. Harap ubah pengaturan browser Anda.';
     } else { // 'default' or 'unsupported'
         icon.className = 'fas fa-bell'; // Bell icon
         text.nodeValue = ' Aktifkan Notifikasi';
@@ -401,20 +411,24 @@ const updateNotificationButton = (permission) => {
 };
 
 const subscribeUserToPush = async () => {
+    console.log('Attempting to subscribe user to push...');
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.warn("Push notifications are not supported by this browser.");
+        console.warn("Push notifications tidak didukung oleh browser ini.");
         updateNotificationButton('unsupported');
         return;
     }
 
+    console.log('Meminta izin notifikasi...');
     const permission = await Notification.requestPermission();
+    console.log('Izin notifikasi yang diberikan:', permission);
     updateNotificationButton(permission);
 
     if (permission !== 'granted') {
-        console.warn('Notification permission not granted.');
+        console.warn('Izin notifikasi tidak diberikan.');
         return;
     }
 
+    console.log('Izin diberikan, melanjutkan proses langganan...');
     try {
         const registration = await navigator.serviceWorker.ready;
         const existingSubscription = await registration.pushManager.getSubscription();
@@ -422,16 +436,17 @@ const subscribeUserToPush = async () => {
         if (existingSubscription) {
             console.log('User is already subscribed.');
             // sendSubscriptionToBackend(existingSubscription); // Optionally re-send
+            updateNotificationButton('granted'); // Pastikan tombol update jika sudah subscribe
             return;
         }
 
         const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: applicationServerKey
+            applicationServerKey: applicationServerKey // Ini harus Uint8Array
         });
-        console.log('User subscribed:', subscription);
-        sendSubscriptionToBackend(subscription);
+        console.log('Pengguna berhasil berlangganan:', subscription);
+        await sendSubscriptionToBackend(subscription);
     } catch (error) {
         console.error('Failed to subscribe the user: ', error);
     }
@@ -693,10 +708,11 @@ const switchView = (view) => {
 // ======================
 const registerServiceWorker = () => {
   if (!('Notification' in window) || !('PushManager' in window)) {
-      console.warn("Notifications or Push API not supported. Service Worker will register, but push won't work.");
+      console.warn("Notifikasi atau Push API tidak didukung. Service Worker akan diregistrasi, tapi push tidak akan berfungsi.");
        if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
               navigator.serviceWorker.register('/service-worker.js')
+                // eslint-disable-next-line no-unused-vars
                 .then(registration => console.log('ServiceWorker registration successful (push unsupported): ', registration.scope))
                 .catch(error => console.log('ServiceWorker registration failed (push unsupported): ', error));
             });
@@ -704,7 +720,9 @@ const registerServiceWorker = () => {
             console.log('Service Worker not supported by this browser.');
         }
       updateNotificationButton('unsupported');
-      if (elements.notificationToggleBtn) elements.notificationToggleBtn.title = 'Browser Anda tidak mendukung notifikasi push.';
+      if (elements.notificationToggleBtn) {
+          elements.notificationToggleBtn.title = 'Browser Anda tidak mendukung notifikasi push.';
+      }
       return;
   }
 
@@ -717,6 +735,7 @@ const registerServiceWorker = () => {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
+        // eslint-disable-next-line no-unused-vars
         .then(registration => console.log('ServiceWorker registration successful with scope: ', registration.scope))
         .catch(error => console.log('ServiceWorker registration failed: ', error));
     });
