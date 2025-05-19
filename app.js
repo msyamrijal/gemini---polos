@@ -81,21 +81,40 @@ const fetchData = async () => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
+        const rawData = await response.json(); // Data directly from Google Sheet
 
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Set to beginning of today
 
         // Process and sort data
-        allSchedules = data
+        allSchedules = rawData
+            .map(rawItem => {
+                const peserta = [];
+                // Collect participants from Peserta 1 to Peserta 10 columns
+                for (let i = 1; i <= 10; i++) {
+                    const pesertaField = rawItem[`Peserta ${i}`]; // Access fields like 'Peserta 1', 'Peserta 2', etc.
+                    if (pesertaField && String(pesertaField).trim() !== '') {
+                        peserta.push(String(pesertaField).trim());
+                    }
+                }
+                return {
+                    ID: rawItem.ID, // Assuming ID is a direct mapping
+                    Institusi: rawItem.Institusi,
+                    Mata_Pelajaran: rawItem.Mata_Pelajaran,
+                    Tanggal: rawItem.Tanggal,
+                    Peserta: peserta, // This is now an array of participant names
+                    Materi_Diskusi: rawItem.Materi_Diskusi,
+                    // TanggalDate will be added in a subsequent step
+                };
+            })
             .filter(item => {
-                // Basic validation: Ensure essential fields exist and date is valid. Materi Diskusi is optional here.
-                return item.Tanggal && item.Institusi && item.Mata_Pelajaran && item.Peserta && !isNaN(new Date(item.Tanggal).getTime());
+                // Basic validation: Ensure essential fields exist and date is valid.
+                // item.Peserta will always be an array here, even if empty.
+                return item.Tanggal && item.Institusi && item.Mata_Pelajaran && !isNaN(new Date(item.Tanggal).getTime());
             })
             .map(item => ({ ...item, TanggalDate: new Date(item.Tanggal) })) // Pre-convert date for sorting/filtering
             .filter(item => item.TanggalDate >= today)
             .sort((a, b) => a.TanggalDate - b.TanggalDate);
-
         initFilters();
         filterSchedules(); // Initial render based on default filters
         attachDynamicListeners();
