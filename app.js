@@ -1,12 +1,25 @@
 // app.js
 const API_URL = 'https://script.google.com/macros/s/AKfycby9sPywic_2ifeYBzE3dQMHfrwkR4-fQv-bNx74HMduvcq5Rr4r9MY6GGEYNqI44WRI/exec';
 
+// VAPID Public Key (Ganti dengan kunci publik VAPID Anda)
+// Anda perlu membuat pasangan kunci VAPID (publik dan privat).
+// Kunci publik ini digunakan oleh browser untuk mengenkripsi pesan.
+// Kunci privat digunakan oleh server Anda (Apps Script) untuk menandatangani pesan.
+//
+// PENTING: Kunci VAPID ini harus unik untuk aplikasi Anda.
+// Jangan gunakan kunci contoh di produksi.
+// Anda bisa menghasilkan kunci VAPID menggunakan library seperti web-push (Node.js) atau online generator.
+// Contoh: https://web-push-codelab.glitch.me/
+const VAPID_PUBLIC_KEY =BIhgLx2GBXHAF3KDIkYvuB90ypRDLth5sT6npJYc28j3gfTeOiggSN-1URWXSNNaNt7lfWAzedOwJ5OCEBGAvG8; // <--- GANTI INI
+const VAPID_PRIVATE_KEY =1L_deNHTSH6u74-EM8CQLK5_vPH2UcRmBcCsMnx_Hj4; // <--- GANTI INI (Meskipun tidak digunakan di frontend, penting untuk backend)
+
 // Elemen DOM
 const elements = {
     // Main controls (now in popup menu)
     searchInput: document.getElementById('searchInput'),
     institutionFilter: document.getElementById('institutionFilter'),
     themeToggleBtn: document.getElementById('themeToggle'),
+    notificationToggleBtn: document.getElementById('notificationToggleBtn'), // New notification button
     // searchToggleBtn: document.getElementById('searchToggleBtn'), // Removed
     gridViewBtn: document.getElementById('gridViewBtn'),
     calendarViewBtn: document.getElementById('calendarViewBtn'),
@@ -67,8 +80,6 @@ const toggleTheme = () => {
 const updateThemeIcon = (theme) => {
     const themeIcon = elements.themeToggleBtn.querySelector('.theme-icon');
     // Style changes handled by CSS based on data-theme attribute
-    // Optional: Add class for animation control if needed
-    // themeIcon.style.transform = theme === 'dark' ? 'rotate(40deg)' : 'rotate(0deg)'; // Handled by CSS now
 };
 
 // ======================
@@ -166,7 +177,6 @@ const filterSchedules = () => {
             item.Mata_Pelajaran,
             item.Peserta.join(' '),
             item.Materi_Diskusi || '' // Include Materi Diskusi in search, handle if it's missing
-            // Optionally add formatted date if needed for search
         ].join(' ').toLowerCase();
 
         const matchesSearch = searchTerm === '' || searchableText.includes(searchTerm);
@@ -196,9 +206,6 @@ const renderSchedules = (data) => {
         return;
     }
 
-    // hideEmptyState(); // Handled by updateEmptyStateVisibility
-    // hideLoading(); // Ensure loading is hidden - Handled elsewhere
-
     const fragment = document.createDocumentFragment();
     data.forEach(item => {
         const card = createScheduleCard(item);
@@ -206,6 +213,22 @@ const renderSchedules = (data) => {
     });
     elements.scheduleGrid.appendChild(fragment);
 };
+
+// Helper function to convert VAPID key to Uint8Array
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
 
 const createScheduleCard = (item) => {
     const card = document.createElement('article');
@@ -239,9 +262,6 @@ const renderCalendar = (data) => {
            Materi_Diskusi: item.Materi_Diskusi,
            itemData: item
        },
-       // Optional: Add colors based on institution or other factors
-       // backgroundColor: getInstitutionColor(item.Institusi),
-       // borderColor: getInstitutionColor(item.Institusi)
    }));
 
    calendarInstance.removeAllEvents(); // Clear previous events
@@ -258,7 +278,6 @@ const showGenericModal = (title, data) => {
     elements.modalBody.innerHTML = generateModalContent(data);
     elements.modal.style.display = 'block'; // Show modal
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    // Focus management could be added here for accessibility
 };
 
 const hideModal = () => {
@@ -300,14 +319,12 @@ const handleEntityClick = (element) => {
     let filterProperty = entityType;
     let modalTitlePrefix = '';
 
-    // Prepare data based on clicked entity
     let filteredData;
     if (entityType === 'Peserta') {
         filteredData = allSchedules.filter(item => item.Peserta.includes(value));
         modalTitlePrefix = `Jadwal untuk ${value}`;
     } else if (entityType === 'Tanggal') {
-        // Match by formatted date string if needed, or re-filter by date object
-         const clickedDateStr = formatDate(value); // Assuming value is a parseable date string initially
+         const clickedDateStr = formatDate(value);
          filteredData = allSchedules.filter(item => formatDate(item.Tanggal) === clickedDateStr);
          modalTitlePrefix = `Jadwal pada ${value}`;
     }
@@ -316,11 +333,9 @@ const handleEntityClick = (element) => {
         modalTitlePrefix = `Jadwal ${value}`;
     }
 
-    // Filter out past schedules for the modal view as well (optional, depends on desired behavior)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const futureFilteredData = filteredData.filter(item => item.TanggalDate >= today);
-
 
     showGenericModal(modalTitlePrefix, futureFilteredData);
 };
@@ -331,55 +346,146 @@ const attachDynamicListeners = () => {
     document.body.addEventListener('click', (e) => {
         const target = e.target;
 
-        // Handle clicks on clickable entities within cards or modal
         if (target.classList.contains('clickable') && target.dataset.entity) {
             handleEntityClick(target);
         }
 
-        // Close modal logic
         if (target === elements.modalOverlay || target === elements.closeModalBtn || target.closest('.close-modal')) {
              hideModal();
         }
 
-        // Close drive dropdown when a link is clicked
         if (target.classList.contains('drive-link') && elements.driveDropdown) {
             elements.driveDropdown.classList.remove('active');
-            // Main menu remains open
         }
     });
+};
+
+// ======================
+// NOTIFICATION & PUSH SUBSCRIPTION
+// ======================
+const checkNotificationPermission = () => {
+    if (!('Notification' in window)) {
+        console.warn("Browser does not support notifications.");
+        return 'unsupported';
+    }
+    return Notification.permission; // 'default', 'granted', 'denied'
+};
+
+const updateNotificationButton = (permission) => {
+    if (!elements.notificationToggleBtn) return;
+
+    const icon = elements.notificationToggleBtn.querySelector('i');
+    const text = elements.notificationToggleBtn.childNodes[1]; // Get the text node
+
+    if (permission === 'granted') {
+        icon.className = 'fas fa-bell'; // Bell icon
+        text.nodeValue = ' Notifikasi Aktif';
+        elements.notificationToggleBtn.disabled = true; // Disable button if granted
+        elements.notificationToggleBtn.style.opacity = 0.7;
+        elements.notificationToggleBtn.style.cursor = 'default';
+    } else if (permission === 'denied') {
+        icon.className = 'fas fa-bell-slash'; // Bell slash icon
+        text.nodeValue = ' Notifikasi Diblokir';
+        elements.notificationToggleBtn.disabled = true; // Disable if denied
+        elements.notificationToggleBtn.style.opacity = 0.7;
+        elements.notificationToggleBtn.style.cursor = 'default';
+        elements.notificationToggleBtn.title = 'Anda telah memblokir notifikasi. Harap ubah pengaturan browser Anda.';
+    } else { // 'default' or 'unsupported'
+        icon.className = 'fas fa-bell'; // Bell icon
+        text.nodeValue = ' Aktifkan Notifikasi';
+        elements.notificationToggleBtn.disabled = false; // Enable button
+        elements.notificationToggleBtn.style.opacity = 1;
+        elements.notificationToggleBtn.style.cursor = 'pointer';
+        elements.notificationToggleBtn.title = 'Klik untuk mengaktifkan notifikasi jadwal.';
+    }
+};
+
+const subscribeUserToPush = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.warn("Push notifications are not supported by this browser.");
+        updateNotificationButton('unsupported');
+        return;
+    }
+
+    const permission = await Notification.requestPermission();
+    updateNotificationButton(permission);
+
+    if (permission !== 'granted') {
+        console.warn('Notification permission not granted.');
+        return;
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        const existingSubscription = await registration.pushManager.getSubscription();
+
+        if (existingSubscription) {
+            console.log('User is already subscribed.');
+            // sendSubscriptionToBackend(existingSubscription); // Optionally re-send
+            return;
+        }
+
+        const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+        });
+        console.log('User subscribed:', subscription);
+        sendSubscriptionToBackend(subscription);
+    } catch (error) {
+        console.error('Failed to subscribe the user: ', error);
+    }
+};
+
+const sendSubscriptionToBackend = async (subscription) => {
+    const subscriptionData = subscription.toJSON();
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'subscribe',
+                password: 'admin123', // Use your actual API password
+                subscription: subscriptionData
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Subscription sent to backend:', result);
+        if (result.status === 'success') {
+             console.log('Subscription successfully stored on backend.');
+        } else {
+             console.error('Backend reported error storing subscription:', result.message);
+        }
+
+    } catch (error) {
+        console.error('Failed to send subscription to backend:', error);
+    }
 };
 
 // ======================
 // UTILITIES
 // ======================
 const formatDate = (dateString) => {
-    // Check if dateString is already a Date object (from processing)
     const date = (dateString instanceof Date) ? dateString : new Date(dateString);
+    if (isNaN(date.getTime())) return 'Tanggal tidak valid';
 
-    if (isNaN(date.getTime())) {
-        return 'Tanggal tidak valid'; // Handle invalid date strings
-    }
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const inputDateOnly = new Date(date); inputDateOnly.setHours(0, 0, 0, 0);
 
-    // Get today's and tomorrow's date at midnight for comparison
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const inputDateOnly = new Date(date);
-    inputDateOnly.setHours(0, 0, 0, 0);
-
-    // Check if the date is today or tomorrow
-    if (inputDateOnly.getTime() === today.getTime()) {
-        return 'Hari Ini';
-    } else if (inputDateOnly.getTime() === tomorrow.getTime()) {
-        return 'Besok';
-    }
+    if (inputDateOnly.getTime() === today.getTime()) return 'Hari Ini';
+    if (inputDateOnly.getTime() === tomorrow.getTime()) return 'Besok';
 
     const options = {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
+        weekday: 'long', day: 'numeric', month: 'long',
         year: (inputDateOnly.getFullYear() !== today.getFullYear()) ? 'numeric' : undefined
     };
     return inputDateOnly.toLocaleDateString('id-ID', options);
@@ -387,28 +493,25 @@ const formatDate = (dateString) => {
 
 const showLoading = () => {
     elements.loading.classList.remove('hidden');
-    elements.loading.style.display = 'flex'; // Ensure display is correct
+    elements.loading.style.display = 'flex';
     elements.emptyState.classList.add('hidden');
-    // Hide both view containers while loading
     elements.scheduleGrid.style.display = 'none';
     elements.calendarView.style.display = 'none';
 };
 
 const hideLoading = () => {
     elements.loading.classList.add('hidden');
-     elements.loading.style.display = 'none';
-     // Show the currently active view container
-     if (currentView === 'grid') {
-         elements.scheduleGrid.style.display = 'grid';
-     } else {
-         elements.calendarView.style.display = 'block';
-     }
+    elements.loading.style.display = 'none';
+    if (currentView === 'grid') {
+        elements.scheduleGrid.style.display = 'grid';
+    } else {
+        elements.calendarView.style.display = 'block';
+    }
 };
 
 const showEmptyState = () => {
     elements.emptyState.classList.remove('hidden');
-    elements.emptyState.style.display = 'flex'; // Ensure display is correct
-    // Hide both view containers when empty
+    elements.emptyState.style.display = 'flex';
     elements.scheduleGrid.style.display = 'none';
     elements.calendarView.style.display = 'none';
     elements.emptyState.innerHTML = `
@@ -420,22 +523,16 @@ const showEmptyState = () => {
 
 const hideEmptyState = () => {
     elements.emptyState.classList.add('hidden');
-     elements.emptyState.style.display = 'none';
+    elements.emptyState.style.display = 'none';
 };
 
-// Helper to manage empty state visibility based on data length
 const updateEmptyStateVisibility = (isEmpty) => {
-  if (isEmpty) {
-      showEmptyState();
-  } else {
-      hideEmptyState();
-  }
+  if (isEmpty) showEmptyState();
+  else hideEmptyState();
 };
-
 
 const showError = (message = 'Terjadi kesalahan.') => {
     hideLoading();
-    // Hide both view containers on error
     elements.scheduleGrid.style.display = 'none';
     elements.calendarView.style.display = 'none';
     elements.emptyState.classList.remove('hidden');
@@ -447,14 +544,10 @@ const showError = (message = 'Terjadi kesalahan.') => {
     `;
 };
 
-// Debounce function to limit frequency of function calls (e.g., on search input)
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
+        const later = () => { clearTimeout(timeout); func(...args); };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
@@ -465,80 +558,54 @@ function debounce(func, wait) {
 // ======================
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
-    initCalendar(); // Initialize calendar structure
-    fetchData(); // Fetch data after DOM is loaded
+    initCalendar();
+    fetchData();
+    registerServiceWorker();
 
-    registerServiceWorker(); // Daftarkan Service Worker
-
-    // Static event listeners
     elements.themeToggleBtn.addEventListener('click', toggleTheme);
-    // elements.searchToggleBtn.addEventListener('click', toggleSearchInput); // Removed listener
 
-    // Drive Dropdown Toggle
+    if (elements.notificationToggleBtn) {
+        elements.notificationToggleBtn.addEventListener('click', subscribeUserToPush);
+    }
+
     if (elements.driveToggleBtn && elements.driveDropdown) {
         elements.driveToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent closing main menu immediately
+            e.stopPropagation();
             elements.driveDropdown.classList.toggle('active');
-            // Optional: Close main menu if drive dropdown is opened? Or keep both open? Current logic keeps main menu open.
         });
     }
 
-    // Add menu toggle functionality
     if (elements.menuToggle && elements.floatingMenu) {
-        // Start Welcome Animation
         elements.floatingMenu.classList.add('welcome-animation');
-        // Hide drive dropdown during animation initially
         if (elements.driveDropdown) elements.driveDropdown.classList.remove('active');
-
-        // After 3 seconds, end animation and set final position/enable drag
         setTimeout(() => {
             elements.floatingMenu.classList.remove('welcome-animation');
-
-            // Set initial position after animation (e.g., top-right)
-            // Ensure offsetWidth is calculated *after* animation class is removed
-            const menuWidth = elements.floatingMenu.offsetWidth || 50; // Use default if offsetWidth is 0 initially
+            const menuWidth = elements.floatingMenu.offsetWidth || 50;
             elements.floatingMenu.style.top = '20px';
             elements.floatingMenu.style.left = `${window.innerWidth - menuWidth - 20}px`;
-            setupDraggableMenu(); // Initialize dragging *after* positioning
-        }, 3000); // 3000 milliseconds = 3 seconds
+            setupDraggableMenu();
+        }, 3000);
     }
 
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
-        // Close Drive dropdown if click is outside it and its button
         if (elements.driveDropdown && elements.driveDropdown.classList.contains('active') &&
             !elements.driveDropdown.contains(e.target) &&
             !elements.driveToggleBtn.contains(e.target)) {
             elements.driveDropdown.classList.remove('active');
         }
-
-        // Close main menu if click is outside it and its button (and not inside drive dropdown)
-        if (elements.floatingMenu.classList.contains('active') &&
-            !elements.floatingMenu.contains(e.target) &&
-            !elements.menuToggle.contains(e.target)) {
-            // Logic to close main menu was removed here previously, keep it removed or add back if needed
-            // elements.floatingMenu.classList.remove('active');
-        }
     });
-    // Modal closing listeners (already handled by delegation in attachDynamicListeners)
-    // elements.closeModalBtn.addEventListener('click', hideModal);
-    // elements.modalOverlay.addEventListener('click', hideModal); // Click outside modal content
 
-    // Close modal with Escape key
-     window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && elements.modal.style.display === 'block') {
-            // Also hide install prompt if escape is pressed? Optional.
-            // if (elements.installPopup && !elements.installPopup.classList.contains('hidden')) elements.installPopup.classList.add('hidden');
             hideModal();
         }
     });
 
-    // View Switcher Listeners
     elements.gridViewBtn.addEventListener('click', () => switchView('grid'));
     elements.calendarViewBtn.addEventListener('click', () => switchView('calendar'));
 
-    // Setup Install Prompt Listener
     setupInstallPrompt();
+    updateNotificationButton(checkNotificationPermission());
 });
 
 // ======================
@@ -549,159 +616,110 @@ const setupDraggableMenu = () => {
     const floatingMenu = elements.floatingMenu;
 
     const dragStart = (e) => {
-        isDragging = true;
-        hasDragged = false; // Reset drag flag
-        menuToggle.style.cursor = 'grabbing'; // Change cursor
-
-        // Get initial positions
+        isDragging = true; hasDragged = false;
+        menuToggle.style.cursor = 'grabbing';
         const event = e.type === 'touchstart' ? e.touches[0] : e;
-        dragStartX = event.clientX;
-        dragStartY = event.clientY;
-        initialMenuX = floatingMenu.offsetLeft;
-        initialMenuY = floatingMenu.offsetTop;
-
-        // Add move and end listeners to the document/window
+        dragStartX = event.clientX; dragStartY = event.clientY;
+        initialMenuX = floatingMenu.offsetLeft; initialMenuY = floatingMenu.offsetTop;
         document.addEventListener('mousemove', dragging);
         document.addEventListener('mouseup', dragEnd);
-        document.addEventListener('touchmove', dragging, { passive: false }); // passive: false to prevent scrolling on touch devices
+        document.addEventListener('touchmove', dragging, { passive: false });
         document.addEventListener('touchend', dragEnd);
-
-        e.preventDefault(); // Prevent text selection during drag
+        e.preventDefault();
     };
 
     const dragging = (e) => {
-        if (!isDragging) return;
-        hasDragged = true; // Mark as dragged
-
+        if (!isDragging) return; hasDragged = true;
         const event = e.type === 'touchmove' ? e.touches[0] : e;
-        const currentX = event.clientX;
-        const currentY = event.clientY;
-
-        const dx = currentX - dragStartX;
-        const dy = currentY - dragStartY;
-
-        let newX = initialMenuX + dx;
-        let newY = initialMenuY + dy;
-
-        // Boundary checks (keep within viewport)
-        const menuWidth = floatingMenu.offsetWidth;
-        const menuHeight = floatingMenu.offsetHeight;
+        const dx = event.clientX - dragStartX; const dy = event.clientY - dragStartY;
+        let newX = initialMenuX + dx; let newY = initialMenuY + dy;
+        const menuWidth = floatingMenu.offsetWidth; const menuHeight = floatingMenu.offsetHeight;
         newX = Math.max(0, Math.min(newX, window.innerWidth - menuWidth));
         newY = Math.max(0, Math.min(newY, window.innerHeight - menuHeight));
-
-        floatingMenu.style.left = `${newX}px`;
-        floatingMenu.style.top = `${newY}px`;
-
-        e.preventDefault(); // Prevent scrolling while dragging on touch
+        floatingMenu.style.left = `${newX}px`; floatingMenu.style.top = `${newY}px`;
+        e.preventDefault();
     };
 
     const dragEnd = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        menuToggle.style.cursor = 'pointer'; // Restore cursor
-
-        // Remove listeners
+        if (!isDragging) return; isDragging = false;
+        menuToggle.style.cursor = 'pointer';
         document.removeEventListener('mousemove', dragging);
         document.removeEventListener('mouseup', dragEnd);
         document.removeEventListener('touchmove', dragging);
         document.removeEventListener('touchend', dragEnd);
-
-        // If it wasn't dragged significantly, treat as a click
-        if (!hasDragged) {
-            floatingMenu.classList.toggle('active');
-        }
+        if (!hasDragged) floatingMenu.classList.toggle('active');
     };
 
-    // Attach start listeners
     menuToggle.addEventListener('mousedown', dragStart);
     menuToggle.addEventListener('touchstart', dragStart);
-
-    // Prevent the default click listener from firing if it was a drag
     menuToggle.addEventListener('click', (e) => {
-        if (hasDragged) {
-            e.preventDefault(); // Stop the click event if dragging occurred
-            e.stopPropagation(); // Stop it from propagating further
-        }
-        // The actual toggle logic is now handled in dragEnd if !hasDragged
-    }, true); // Use capture phase to potentially stop it earlier
+        if (hasDragged) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
 };
 
 // ======================
 // CALENDAR FUNCTIONS
 // ======================
 const initCalendar = () => {
-   if (calendarInstance) return; // Already initialized
-
+   if (calendarInstance) return;
    calendarInstance = new FullCalendar.Calendar(elements.calendarView, {
-       initialView: 'dayGridMonth', // Or 'timeGridWeek', 'listWeek', etc.
-       locale: 'id', // Set locale to Indonesian
-       headerToolbar: {
-           left: 'prev,next today',
-           center: 'title',
-           right: 'dayGridMonth,timeGridWeek,listWeek' // Example view options
-       },
-       events: [], // Start with empty events, will be populated by renderCalendar
-       height: 'auto', // Adjust height automatically
-       eventTimeFormat: { // Indonesian time format
-           hour: '2-digit',
-           minute: '2-digit',
-           hour12: false // Use 24-hour format
-       },
-       // Optional: Handle event clicks
+       initialView: 'dayGridMonth', locale: 'id',
+       headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+       events: [], height: 'auto',
+       eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
        eventClick: function(info) {
-           // console.log('Event clicked:', info.event.extendedProps.itemData);
-           // Example: Show modal with details of the clicked event
            const item = info.event.extendedProps.itemData;
-           showGenericModal(`Detail: ${item.Mata_Pelajaran}`, [item]); // Show modal with single item data
-           // Prevent browser navigation
+           showGenericModal(`Detail: ${item.Mata_Pelajaran}`, [item]);
            info.jsEvent.preventDefault();
        }
-       // Add other FullCalendar options as needed
    });
-
-   calendarInstance.render(); // Initial render of the calendar structure
+   calendarInstance.render();
 };
 
 const switchView = (view) => {
-   if (view === currentView) return; // No change needed
-
+   if (view === currentView) return;
    currentView = view;
-
-   // Update button active states
    elements.gridViewBtn.classList.toggle('active', view === 'grid');
    elements.calendarViewBtn.classList.toggle('active', view === 'calendar');
-
-   // Update container visibility
    elements.scheduleGrid.classList.toggle('active', view === 'grid');
    elements.calendarView.classList.toggle('active', view === 'calendar');
-
-   // Ensure correct display property is set when activating
    elements.scheduleGrid.style.display = view === 'grid' ? 'grid' : 'none';
    elements.calendarView.style.display = view === 'calendar' ? 'block' : 'none';
-
-
-   // Re-render content for the new view if data is already loaded
-   if (allSchedules.length > 0) {
-       filterSchedules(); // This will now render the correct view
-   }
+   if (allSchedules.length > 0) filterSchedules();
 };
 
 // ======================
 // SERVICE WORKER REGISTRATION
 // ======================
 const registerServiceWorker = () => {
+  if (!('Notification' in window) || !('PushManager' in window)) {
+      console.warn("Notifications or Push API not supported. Service Worker will register, but push won't work.");
+       if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => console.log('ServiceWorker registration successful (push unsupported): ', registration.scope))
+                .catch(error => console.log('ServiceWorker registration failed (push unsupported): ', error));
+            });
+        } else {
+            console.log('Service Worker not supported by this browser.');
+        }
+      updateNotificationButton('unsupported');
+      if (elements.notificationToggleBtn) elements.notificationToggleBtn.title = 'Browser Anda tidak mendukung notifikasi push.';
+      return;
+  }
+
+  navigator.serviceWorker.ready.then(registration => {
+      registration.pushManager.getSubscription().then(subscription => {
+          if (subscription) updateNotificationButton('granted');
+      });
+  });
+
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { // Gunakan 'load' agar tidak menunda render awal
+    window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        })
-        .catch(error => {
-          console.log('ServiceWorker registration failed: ', error);
-        });
+        .then(registration => console.log('ServiceWorker registration successful with scope: ', registration.scope))
+        .catch(error => console.log('ServiceWorker registration failed: ', error));
     });
-  } else {
-      console.log('Service Worker not supported by this browser.');
   }
 };
 
@@ -710,37 +728,23 @@ const registerServiceWorker = () => {
 // ======================
 const setupInstallPrompt = () => {
     window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent the mini-infobar from appearing on mobile
         e.preventDefault();
-        // Stash the event so it can be triggered later.
         deferredInstallPrompt = e;
         console.log('`beforeinstallprompt` event was fired.');
-
-        // Wait 10 seconds then show the custom prompt, only if not already installed
         setTimeout(() => {
-            if (deferredInstallPrompt && elements.installPopup) {
-                 // Check if running as standalone PWA already
-                 if (!window.matchMedia('(display-mode: standalone)').matches) {
-                    elements.installPopup.classList.remove('hidden');
-                 }
+            if (deferredInstallPrompt && elements.installPopup && !window.matchMedia('(display-mode: standalone)').matches) {
+                elements.installPopup.classList.remove('hidden');
             }
-        }, 10000); // 10000 milliseconds = 10 seconds
+        }, 10000);
     });
 
     if (elements.installBtn) {
         elements.installBtn.addEventListener('click', async () => {
-            if (!deferredInstallPrompt) {
-                console.log('Install prompt event not available.');
-                return;
-            }
-            // Hide our custom prompt
+            if (!deferredInstallPrompt) return;
             elements.installPopup.classList.add('hidden');
-            // Show the install prompt
             deferredInstallPrompt.prompt();
-            // Wait for the user to respond to the prompt
             const { outcome } = await deferredInstallPrompt.userChoice;
             console.log(`User response to the install prompt: ${outcome}`);
-            // We've used the prompt, clear it.
             deferredInstallPrompt = null;
         });
     }
@@ -748,15 +752,12 @@ const setupInstallPrompt = () => {
     if (elements.dismissInstallBtn) {
         elements.dismissInstallBtn.addEventListener('click', () => {
             elements.installPopup.classList.add('hidden');
-            // Optionally, set a flag in localStorage to not show again for this session/day
-            // localStorage.setItem('installPromptDismissed', 'true');
         });
     }
 
     window.addEventListener('appinstalled', () => {
         console.log('PWA was installed');
-        // Hide the prompt if it's somehow still visible
         if (elements.installPopup) elements.installPopup.classList.add('hidden');
-        deferredInstallPrompt = null; // Clear the deferred prompt
+        deferredInstallPrompt = null;
     });
 };

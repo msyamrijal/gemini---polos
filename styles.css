@@ -356,6 +356,23 @@ body {
     display: flex;
 }
 
+/* Style for general menu buttons */
+.menu-button {
+    width: 100%; /* Full width in the menu */
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left; /* Align text to the left */
+    display: flex; /* Use flex to align icon and text */
+    align-items: center;
+    gap: 0.8rem; /* Space between icon and text */
+}
+
 /* Style for the row containing theme toggle and view switcher */
 .menu-row {
     position: relative; /* Needed for absolute positioning of dropdown */
@@ -364,6 +381,11 @@ body {
     align-items: center; /* Ratakan item secara vertikal */
     width: 100%; /* Ambil lebar penuh container */
     gap: 0.5rem; /* Add some gap between items */
+}
+
+.menu-button:hover {
+    background-color: var(--color-secondary);
+    border-color: var(--color-text-muted);
 }
 
 /* Google Drive Button Styles */
