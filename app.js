@@ -10,8 +10,8 @@ const API_URL = 'https://script.google.com/macros/s/AKfycby9sPywic_2ifeYBzE3dQMH
 // Jangan gunakan kunci contoh di produksi.
 // Anda bisa menghasilkan kunci VAPID menggunakan library seperti web-push (Node.js) atau online generator.
 // Contoh: https://web-push-codelab.glitch.me/
-const VAPID_PUBLIC_KEY =BIhgLx2GBXHAF3KDIkYvuB90ypRDLth5sT6npJYc28j3gfTeOiggSN-1URWXSNNaNt7lfWAzedOwJ5OCEBGAvG8; // <--- GANTI INI
-const VAPID_PRIVATE_KEY =1L_deNHTSH6u74-EM8CQLK5_vPH2UcRmBcCsMnx_Hj4; // <--- GANTI INI (Meskipun tidak digunakan di frontend, penting untuk backend)
+const VAPID_PUBLIC_KEY = 'BIhgLx2GBXHAF3KDIkYvuB90ypRDLth5sT6npJYc28j3gfTeOiggSN-1URWXSNNaNt7lfWAzedOwJ5OCEBGAvG8'; // <--- GANTI INI
+const VAPID_PRIVATE_KEY = '1L_deNHTSH6u74-EM8CQLK5_vPH2UcRmBcCsMnx_Hj4'; // <--- GANTI INI (Meskipun tidak digunakan di frontend, penting untuk backend)
 
 // Elemen DOM
 const elements = {
